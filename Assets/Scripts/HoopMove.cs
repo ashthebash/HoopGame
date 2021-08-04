@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class HoopMove : MonoBehaviour
 {
-    ScoreManager scoreManager;
 
     public enum Axis { X, Y, Z}
 

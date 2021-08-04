@@ -7,22 +7,25 @@ public class BallManager : MonoBehaviour
 {
     public static BallManager Instance { get; private set; }
 
+    // Ball Properties.
     public GameObject ballPrefab;
     GameObject currentBall;
     [Range(.2f, 5f)]
     public float zDistance = 2f;
     private List<Vector3> posHistory = new List<Vector3>();
-
+    public List<Vector3> PosHistory { get => posHistory; set => posHistory = value; }
 
     Plane plane;
 
+    //  Throwing Properties.
     float throwTollerance = .01f;
     float throwMultiplier = 1300f;
 
-    public List<Vector3> PosHistory { get => posHistory; set => posHistory = value; }
     
     private void Awake()
     {
+    
+        //  Initialise Singleton.
         if (Instance != null && Instance != this)
         {
             Destroy(this.gameObject);
@@ -32,7 +35,6 @@ public class BallManager : MonoBehaviour
             Instance = this;
         }
     }
-
 
     void Start()
     {
@@ -50,17 +52,17 @@ public class BallManager : MonoBehaviour
         currentBall.GetComponent<Collider>().enabled = false;
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (currentBall != null)
         {
             transform.position = currentBall.transform.position; //  Set Manager to position of current ball.
-
         }
-
     }
 
+    /// <summary>
+    /// Creates a dynamic plane at the position of the ball and store the current position of the ball at time of click.
+    /// </summary>
     private void OnMouseDown()
     {
         if (currentBall == null)
@@ -68,13 +70,15 @@ public class BallManager : MonoBehaviour
             return;
         }
 
-
         plane.SetNormalAndPosition(Camera.main.transform.forward, currentBall.transform.position);
 
         PosHistory.Clear();
         PosHistory.Add(currentBall.transform.position);
     }
 
+    /// <summary>
+    /// Create a ray on the camera's near plane based on mouse position. Cast to the plane and calculate mouse position on the plane. Make sure Z axis is correct and move ball with mouse position. Store ball position at intervals.
+    /// </summary>
     private void OnMouseDrag()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -110,15 +114,13 @@ public class BallManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// If the magnitude of the throw is greater than specified tollerance, enable physics and add force based on vector.
+    /// </summary>
     private void OnMouseUp()
     {
         if (currentBall != null)
         {
-            Vector3 mousePos = Input.mousePosition;
-            Vector3 endPos = mousePos;
-            endPos.z = currentBall.transform.position.z - Camera.main.transform.position.z;
-            endPos = Camera.main.ScreenToWorldPoint(endPos);
-
             int lastPosIndex = PosHistory.Count - 2;
 
             if (lastPosIndex < 0)
@@ -126,7 +128,7 @@ public class BallManager : MonoBehaviour
                 lastPosIndex = 0;
             }
 
-            Vector3 throwVector = endPos - PosHistory[lastPosIndex];
+            Vector3 throwVector = currentBall.transform.position - PosHistory[lastPosIndex];
 
             if (throwVector.magnitude < .09f)
             {
@@ -135,8 +137,6 @@ public class BallManager : MonoBehaviour
             }
 
             throwVector.z = throwVector.magnitude;
-            //throwForce.y /= 2f;
-            //throwForce.x /= 2f;
 
             Rigidbody ballRb = currentBall.GetComponent<Rigidbody>();
             currentBall.GetComponent<Collider>().enabled = true;
